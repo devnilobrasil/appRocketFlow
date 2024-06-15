@@ -9,7 +9,7 @@ export default function Sidebar() {
     return (
         <div className="bg-secondary w-56 flex flex-col items-center py-10 font-jaro">
             <div className="w-full text-center">
-                <Link className="text-3xl" to='/'>RocketFlow</Link>
+                <Link className="text-3xl" to='/appRocketFlow'>RocketFlow</Link>
             </div>
             <div className="h-full w-full flex flex-col justify-start pt-20 gap-10">
                 <div className='flex flex-col items-center justify-center gap-5'>
