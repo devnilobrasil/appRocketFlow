@@ -11,7 +11,7 @@ function App() {
     <div className='flex'>
       <Sidebar/>
       <Routes>
-        <Route path='/' element={<HomePage/>}/>
+        <Route path='/appRocketFlow' element={<HomePage/>}/>
         <Route path='/registerMatch' element={<RegisterMatches />} />
         <Route path='/matches' element={<Matches />} />
         <Route path='/charts' element={<Charts />} />
