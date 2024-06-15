@@ -7,14 +7,16 @@ import Charts from './pages/Charts';
 import './App.css';
 
 function App() {
+
+  const path = '/appRocketFlow'
   return (
     <div className='flex'>
       <Sidebar/>
       <Routes>
-        <Route path='/appRocketFlow' element={<HomePage/>}/>
-        <Route path='/registerMatch' element={<RegisterMatches />} />
-        <Route path='/matches' element={<Matches />} />
-        <Route path='/charts' element={<Charts />} />
+        <Route path={`${path}`} element={<HomePage/>}/>
+        <Route path={`${path}/registerMatch`} element={<RegisterMatches />} />
+        <Route path={`${path}/matches`} element={<Matches />} />
+        <Route path={`${path}/charts`} element={<Charts />} />
       </Routes>
     </div>
   )
