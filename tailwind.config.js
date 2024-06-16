@@ -12,6 +12,7 @@ export default {
       derrota: '#d00000',
       vitoria: '#2c6e49',
       white: '#fff',
+      greyDark: '#343a40',
     },
     fontFamily: {
       'jaro': ['Jaro'],

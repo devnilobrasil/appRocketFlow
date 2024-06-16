@@ -27,11 +27,20 @@ export default function Matches() {
 
     // Função para carregar os jogos correspondentes à data selecionada
     const loadMatches = async () => {
-        if (selectedDate && selectedSeason) { // Verifica se tanto a data quanto a temporada estão selecionadas
+        if (selectedDate && selectedSeason) {
             const matchesRef = collection(db, `Temporada ${selectedSeason}`);
-            const matchesQuery = query(matchesRef, where("selectedDate", "==", selectedDate)); // Não é necessário adicionar a condição da temporada, pois já estamos consultando na coleção correta
+            const matchesQuery = query(matchesRef, where("selectedDate", "==", selectedDate));
             const matchesSnapshot = await getDocs(matchesQuery);
-            const matchesData = matchesSnapshot.docs.map(doc => doc.data());
+            const matchesData = matchesSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            // Ordenar os dados pelo número da partida extraído do ID
+            matchesData.sort((a, b) => {
+                const numA = parseInt(a.id.split('_').pop());
+                const numB = parseInt(b.id.split('_').pop());
+                return numA - numB;
+            });
             setMatches(matchesData);
         }
     };
@@ -65,11 +74,12 @@ export default function Matches() {
             <div className="w-full grid grid-cols-2 px-6 h-full overflow-y-scroll py-5 place-items-center gap-10">
                 {matches.map((match, index) => {
                     const isRocketFlowWinning = match.rocketFlow > match.visitante;
+                    const partidaNumber = match.id.split('_').pop();
                     return (
                         <div key={index} className="border-2 w-full border-secondary flex">
                             <div className="w-full">
                                 <div className="relative border-2 border-secondary">
-                                    <h2 className="bg-secondary font-jaro text-center">Partida {index + 1}</h2>
+                                    <h2 className="bg-secondary font-jaro text-center">Partida {partidaNumber}</h2>
                                 </div>
                                 <div className="flex">
                                     <TablePlayers match={match} />

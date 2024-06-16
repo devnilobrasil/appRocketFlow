@@ -1,7 +1,7 @@
 import DateMatches from "../../components/DateMatches";
 import SeasonDropdown from "../../components/SeasonDropdown";
 import { db } from "../../utils/firebase";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
 import { useState } from "react";
 import rocketImage from '../../assets/images/rocketleague.webp'
 
@@ -19,17 +19,15 @@ export default function RegisterMatches() {
 
 
     const resetFormData = () => {
-        setFormData({
+        setFormData( prevState =>({
+            ...prevState,
             danilo: { pontos: "", gols: "", assists: "", defesas: "", chutes: "", mvp: false },
             junin: { pontos: "", gols: "", assists: "", defesas: "", chutes: "", mvp: false },
             nilo: { pontos: "", gols: "", assists: "", defesas: "", chutes: "", mvp: false },
             rocketFlow: "",
             visitante: "",
-            selectedDate: "",
-            season: "",
             result: "",
-
-        });
+        }));
     };
 
     const handleRegister = async () => {
@@ -43,14 +41,33 @@ export default function RegisterMatches() {
                 return;
             }
 
-            if (formData.rocketFlow > formData.visitante){
+            if (formData.rocketFlow > formData.visitante) {
                 formData.result = "vitoria"
             } else {
                 formData.result = "derrota"
             }
-            // Caminho para a coleção baseada na temporada selecionada
-            const collectionRef = collection(db, `Temporada ${formData.season}`); // Use o valor da temporada selecionada aqui
-            await addDoc(collectionRef, formData);
+            
+            // Referência para a coleção da temporada selecionada
+            const collectionRef = collection(db, `Temporada ${formData.season}`);
+
+            // Query para encontrar todas as partidas na mesma temporada e data
+            const q = query(collectionRef, where('selectedDate', '==', formData.selectedDate));
+            const querySnapshot = await getDocs(q);
+
+            // Número da partida baseado no número de documentos encontrados
+            const numeroPartida = querySnapshot.size + 1;
+
+            // Extrair dia e mês da data selecionada
+            const selectedDate = new Date(formData.selectedDate);
+            const dia = String(selectedDate.getDate()).padStart(2, '0');
+            const mes = String(selectedDate.getMonth() + 1).padStart(2, '0'); // getMonth() retorna 0 para janeiro
+
+            // Construir o ID no formato desejado
+            const docId = `temp_${formData.season}_${dia}${mes}_${numeroPartida}`;
+
+            // Adicionar o documento com o ID customizado
+            await addDoc(collectionRef, { ...formData, id: docId });
+
             alert("Partida registrada com sucesso.");
             resetFormData();
         } catch (e) {
@@ -99,17 +116,18 @@ export default function RegisterMatches() {
     return (
         <div className="bg-primary text-secondary font-jaro w-full h-screen flex flex-col justify-center items-center gap-10">
             <div className="flex w-full items-center justify-center gap-10">
-            <SeasonDropdown 
-                selectedSeason={formData.season} 
-                setSelectedSeason={(season) => setFormData(prevState => ({...prevState, season}))} 
-            />
-            <DateMatches 
-                selectedDate={formData.selectedDate} 
-                setSelectedDate={(date) => setFormData(prevState => ({ ...prevState, selectedDate: date }))} 
-            />
+                <SeasonDropdown
+                    selectedSeason={formData.season}
+                    setSelectedSeason={(season) => setFormData(prevState => ({ ...prevState, season }))}
+                />
+                <DateMatches
+                    selectedDate={formData.selectedDate}
+                    setSelectedDate={(date) => setFormData(prevState => ({ ...prevState, selectedDate: date }))}
+                />
             </div>
             <div className="max-w-screen-xl flex flex-col gap-8 ">
                 <div className="grid grid-cols-1 place-items-center gap-8">
+                    {/* Danilo */}
                     <div className="flex items-center justify-center h-full gap-4">
                         <div className="flex border-2 w-32 overflow-hidden items-center justify-center rounded-lg h-full">
                             <img className="object-cover  h-full" src={rocketImage} alt="" />
@@ -201,7 +219,7 @@ export default function RegisterMatches() {
                             </tbody>
                         </table>
                     </div>
-                    {/* Adicionar as seções para Junin e Nilo aqui, seguindo o mesmo padrão */}
+                    {/* Junin */}
                     <div className="flex items-center justify-center h-full gap-4">
                         <div className="flex border-2 w-32 overflow-hidden items-center justify-center rounded-lg h-full">
                             <img className="object-cover  h-full" src={rocketImage} alt="" />
@@ -293,6 +311,7 @@ export default function RegisterMatches() {
                             </tbody>
                         </table>
                     </div>
+                    {/* Nilo */}
                     <div className="flex items-center justify-center h-full gap-4">
                         <div className="flex border-2 w-32 overflow-hidden items-center justify-center rounded-lg h-full">
                             <img className="object-cover  h-full" src={rocketImage} alt="" />
@@ -384,39 +403,39 @@ export default function RegisterMatches() {
                             </tbody>
                         </table>
                     </div>
-                </div>
-                <div className="flex flex-col overflow-hidden items-center gap-5 rounded-lg border-2 w-1/2 self-center">
-                    <h1 className="bg-secondary w-full text-primary text-3xl text-center">Resultado</h1>
-                    <div className="flex gap-8 pb-5">
-                        <div className="flex flex-col items-center gap-3 justify-center">
-                            <label className="text-xl" name="RocketFlow">RocketFlow</label>
-                            <input
-                                className="p-2 w-24 max-w-48 text-center bg-secondary text-primary text-5xl outline-none border-2 border-secondary rounded-md"
-                                type="number"
-                                name="rocketFlow"
-                                id="rocketFlow"
-                                onInput={(event) => limitarCaracteres(event, 2)}
-                                onChange={handleInputChange}
-                                value={formData.rocketFlow}
-                                required
-                            />
-                        </div>
-                        <div className="flex flex-col items-center gap-3 justify-center">
-                            <label className="text-xl" name="visitante">Visitante</label>
-                            <input
-                                className="p-2 w-24 max-w-48 text-center bg-secondary text-primary text-5xl outline-none border-2 border-secondary rounded-md"
-                                type="number"
-                                name="visitante"
-                                id="visitante"
-                                onInput={(event) => limitarCaracteres(event, 2)}
-                                onChange={handleInputChange}
-                                value={formData.visitante}
-                                required
-                            />
+                    {/* Resultado */}
+                    <div className="flex flex-col overflow-hidden items-center gap-5 rounded-lg border-2 w-1/2 self-center">
+                        <h1 className="bg-secondary w-full text-primary text-3xl text-center">Resultado</h1>
+                        <div className="flex gap-8 pb-5">
+                            <div className="flex flex-col items-center gap-3 justify-center">
+                                <label className="text-xl" name="RocketFlow">RocketFlow</label>
+                                <input
+                                    className="p-2 w-24 max-w-48 text-center bg-secondary text-primary text-5xl outline-none border-2 border-secondary rounded-md"
+                                    type="number"
+                                    name="rocketFlow"
+                                    id="rocketFlow"
+                                    onInput={(event) => limitarCaracteres(event, 2)}
+                                    onChange={handleInputChange}
+                                    value={formData.rocketFlow}
+                                    required
+                                />
+                            </div>
+                            <div className="flex flex-col items-center gap-3 justify-center">
+                                <label className="text-xl" name="visitante">Visitante</label>
+                                <input
+                                    className="p-2 w-24 max-w-48 text-center bg-secondary text-primary text-5xl outline-none border-2 border-secondary rounded-md"
+                                    type="number"
+                                    name="visitante"
+                                    id="visitante"
+                                    onInput={(event) => limitarCaracteres(event, 2)}
+                                    onChange={handleInputChange}
+                                    value={formData.visitante}
+                                    required
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div></div>
             </div>
             <div className="flex gap-10">
                 <button className="bg-secondary py-4 px-10 text-primary rounded-lg" onClick={resetFormData}>Limpar</button>
